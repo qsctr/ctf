@@ -96,9 +96,7 @@ print(long_to_bytes(ans).decode())
 ```
 Voila! we now have the flag!
 
-
-
-## Full script (python):
+## FULL SCRIPT (python):
 ```python
 from fractions import Fraction
 from Crypto.Util.number import long_to_bytes

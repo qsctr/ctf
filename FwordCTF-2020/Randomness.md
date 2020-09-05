@@ -114,12 +114,12 @@ for i in range(len(output)):
 for i in range(len(ans)):
   print(long_to_bytes(ans[i]).decode(), end = "")
 ```
-Running this results in the flag:  
+Running this results in the mythical flag we have been searching for:  
 
     FwordCTF{LCG_easy_to_break!That_was_a_mistake_choosing_it_as_a_secure_way}
 
 
-FULL SCRIPT:
+## FULL SCRIPT (python):
 ```python
 from Crypto.Util.number import *
 from random import *
