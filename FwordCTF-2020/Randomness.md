@@ -98,7 +98,7 @@ Thus we get the results:
 
 Now that we have our LCG, we can just generate the numbers and xor with the corresponding output to determine the flag!
 
-# Recreating the LCG
+## Recreating the LCG
 ```python
 prexor = [6680465291011788181] 
 i = 0
