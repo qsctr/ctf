@@ -1,5 +1,5 @@
 # The Substitution Game (Misc)
-We're given a server to ```nc``` to and the [source code](https://github.com/redpwn/redpwnctf-2021-challenges/blob/master/misc/the-substitution-game/chall.py) for the challenge. My solution script is in the python file called substitution_game.py and I piped the print output to ```nc``` to automate our solution.
+We're given a server to ```nc``` to and the [source code](https://github.com/redpwn/redpwnctf-2021-challenges/blob/master/misc/the-substitution-game/chall.py) for the challenge. My solution script is in the python file called [substitution_game.py](https://github.com/qsctr/ctf/blob/master/redpwnCTF-2021/the-substitution-game/substitution_game.py) and I piped the print output to ```nc``` to automate our solution.
 
 
 ## Explanation
@@ -297,4 +297,4 @@ And that's it! After solving these six levels (phew that took a while), we final
 flag{wtf_tur1n9_c0mpl3t3}
 ```
 
-Huhh?? Turing complete? I didn't know that.. hmm guess I should work up my CS theory.
+Huhh?? Turing complete? I didn't know that... hmm guess I should work up my CS theory.
