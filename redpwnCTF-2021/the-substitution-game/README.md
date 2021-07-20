@@ -1,5 +1,5 @@
 # The Substitution Game (Misc)
-We're given a server to ```nc``` to and the [source code](https://github.com/redpwn/redpwnctf-2021-challenges/blob/master/misc/the-substitution-game/chall.py) (or scroll to the bottom) for the challenge. My solution script is in the python file called substitution_game.py and I piped the print output to ```nc``` to automate our solution.
+We're given a server to ```nc``` to and the [source code](https://github.com/redpwn/redpwnctf-2021-challenges/blob/master/misc/the-substitution-game/chall.py) for the challenge. My solution script is in the python file called substitution_game.py and I piped the print output to ```nc``` to automate our solution.
 
 
 ## Explanation
@@ -53,7 +53,7 @@ Target string: goodbyegoodbyegoodbyeginkyginkyginkygoodbyeginkygoodbyegoodbyegin
 Initial string: helloginkoidhelloginkoidginkoidginkoidginkoidginkoidhelloginkoid
 Target string: goodbyeginkygoodbyeginkyginkyginkyginkyginkygoodbyeginky
 ```
-Looking carefully through the texts, we can see giving the rules below should solve the challeng
+Looking carefully through the texts, we can see giving the rules below should solve the challenge
 ```
 hello => goodbye
 ginkoid => ginky
@@ -87,169 +87,214 @@ Target string: ginkoid
 Initial string: ggggggggggggggggggggggggggg
 Target string: ginkoid
 ```
-This level was more interesting and you had to utilize mapping "g" to a different different character otherwise it would result in ginkoidinkoidinkoid... as "g" exists in the word "ginkoid". So 
+This level was more interesting, if we just mapped 'g' to 'ginkoid' it would result in ginkoidinkoidinkoid... as 'g' exists in the word 'ginkoid'. Perhaps a better approach is needed. Ah, of course! We can map the 'g's to a different character first. So with this idea, we can first map 'gg' to a different character (in this case 'zz'), then shrink that character as we did in Level 3 and then convert it to ginkoid:
+```
+gg => z
+zz => z
+zg => ginkoid
+z => ginkoid
+```
 
-```python
-#!/usr/local/bin/python
+### Level 5
+```
+Initial string: ^0100111111110010111100001001001000011110100111111110010$
+Target string: palindrome
 
-from random import SystemRandom
-rand = SystemRandom()
+Initial string: ^00101101101100000100001010111000101011001101010001110011100110110010101110110100100110101$
+Target string: not_palindrome
 
+Initial string: ^000101100000010100111001110001111011110110010001010100010011011110111100011100111001010000001101000$
+Target string: palindrome
 
-def test_substitution(substitutions, string):
-    def substitute(s, a, b):
-        initial = s
-        s = s.replace(a, b)
-        return (s, not s == initial)
+Initial string: ^0001101011011101010100101001000011101000110100101110000100001110011111100101100110$
+Target string: not_palindrome
+```
+Uh oh. This looks significnatly more difficult than level 4. We tried a few ideas with trying to check if both ends of the string were the same character, but that failed. Then we remembered that the one way of checking for palindromes was find the middle of the string and check outwards. Now with our string replacement rules, checking outwards should be easy as we can check via '1anything1' and '0anything0', and simply change the middle to something else (thus marking the string as not a palindrome). But moving the karat and the dollar sign to the middle of the string was a more daunting task than we expected.
 
-    # s ^ 2 rounds for string of length s
-    for _ in range(len(string) ** 2):
-        performed_substitute = False
-        for find, replace in substitutions:
-            string, performed_substitute = substitute(string, find, replace)
-            # once a substitute is performed, go to next round
-            if performed_substitute:
-                break
-        # if no substitute was performed this round, we are done
-        if not performed_substitute:
-            break
-    return string
-
-
-def read_substitution(string):
-    substitution = tuple(s.strip() for s in string.split('=>'))
-    return substitution if len(substitution) == 2 else ('', '')
-
-
-def run_level(case_generator, max_subs, test_cases=32):
-    if input('See next level? (y/n) ') == 'n':
-        exit()
-
-    print('-' * 80)
-    print('Here is this level\'s intended behavior:')
-    for _ in range(10):
-        initial, target = case_generator()
-        print(f'\nInitial string: {initial}')
-        print(f'Target string: {target}')
-
-    print('-' * 80)
-    substitutions = []
-    current = input(
-        f'Enter substitution of form "find => replace", {max_subs} max: '
-    )
-    substitutions.append(read_substitution(current))
-    for _ in range(max_subs - 1):
-        if input('Add another? (y/n) ') == 'n':
-            break
-        current = input('Enter substitution of form "find => replace": ')
-        substitutions.append(read_substitution(current))
-
-    print('-' * 80)
-    print('Testing substitutions...', flush=True)
-    for _ in range(test_cases):
-        initial, target = case_generator()
-        output = test_substitution(substitutions, initial)
-        if not output == target:
-            print(f'Failed on string: {initial}.')
-            print(f'Expected: {target}.')
-            print(f'Computed: {output}.')
-            exit()
-    print('Level passed!')
-
-
-print('''
-Welcome to The Substitution Game!
-In each level, you will enter a list of string substitutions.
-For example, you may want to change every instance of 'abcd' to 'def'.
-The game will provide a series of test cases.
-For each case, substitutions will be applied repeatedly in a series of rounds.
-In each round, the first possible substitution will be performed.
-For test case of length s, there will be s ^ 2 substitution rounds.
-In each round, we will show examples of intended substitution behavior.
-It is your goal to match our behavior.
-''')
-
-
-randint = rand.randint
-
-
-def level_1():
-    initial = f'{"0" * randint(0, 20)}initial{"0" * randint(0, 20)}'
-    target = initial.replace('initial', 'target')
-    return (initial, target)
-
-
-def level_2():
-    initial = ''.join(
-        rand.choice(['hello', 'ginkoid']) for _ in range(randint(10, 20))
-    )
-    target = initial.replace('hello', 'goodbye').replace('ginkoid', 'ginky')
-    return (initial, target)
-
-
-def level_3():
-    return ('a' * randint(10, 100), 'a')
-
-
-def level_4():
-    return ('g' * randint(10, 100), 'ginkoid')
-
-
-def level_5():
-    random_string = ''.join(
-        str(randint(0, 1)) for _ in range(randint(25, 50))
-    )
-    initial = random_string
-    initial += rand.choice(['', '0', '1'])
-    initial += random_string[::-1]
-
-    if rand.randint(0, 1):
-        return (f'^{initial}$', 'palindrome')
-    else:
-        shuffled = list(initial)
-        rand.shuffle(shuffled)
-        return (
-            f'^{"".join(shuffled)}$',
-            'not_palindrome'
-        )
-
-
-def level_6():
-    first_number = randint(0, 255)
-    second_number = randint(0, 255)
-    answer = first_number + second_number
-    result = 'correct'
-    # random chance that answer is wrong
-    if rand.randint(0, 1):
-        answer = randint(0, 511)
-        if not answer == first_number + second_number:
-            result = 'incorrect'
-
-    # convert all to string representations
-    numbers = [
-        bin(first_number)[2:], bin(second_number)[2:], bin(answer)[2:]
-    ]
-
-    # chance to pad a number or answer
-    if randint(0, 1):
-        index = randint(0, 2)
-        numbers[index] = '0' * randint(1, 3) + numbers[index]
-        # chance to make padded number additionally wrong
-        if randint(0, 1):
-            result = 'incorrect'
-            numbers[index] = '1' + numbers[index]
-
-    return (f'^{numbers[0]}+{numbers[1]}={numbers[2]}$', result)
-
-
-run_level(level_1, 5)
-run_level(level_2, 10)
-run_level(level_3, 10)
-run_level(level_4, 10)
-run_level(level_5, 100, test_cases=128)
-run_level(level_6, 300, test_cases=128)
-
-print('-' * 80)
-print('You win! Here\'s your flag: [REDACTED]')
+The clever idea came to me of shifting the karat by one character, shifting the dollar sign by one character while marking both of them so they don't keep moving, and finally reset both of them to its orginal state.
 
 ```
+# Handle not_palindrome state
+1not_palindrome0 => not_palindrome
+0not_palindrome1 => not_palindrome
+1not_palindrome1 => not_palindrome
+0not_palindrome0 => not_palindrome
+
+# Handle palindrome case, if two sides don't match goto not_palindrome state
+1palindrome0 => not_palindrome
+0palindrome1 => not_palindrome
+1palindrome1 => palindrome
+0palindrome0 => palindrome
+
+# If the karat and dollar sign are in the middle of the string, goto palindrome state
+^$ => palindrome
+^1$ => palindrome
+^0$ => palindrome
+
+# Shift karat and dollar sign towards center and using the character 'z' to shift only by one character
+^0 => 0^z
+0$ => z$0
+^1 => 1^z
+1$ => z$1
+
+# If it's not palindrome or not_palindrome state and the karat and dollar sign have both moved one character, then flush 'z' so the karat and dollar sign can move again
+z =>
+```
+
+### Level 6
+```
+Initial string: ^110101+011010000=100000101$
+Target string: correct
+
+Initial string: ^110001+10101011=1011011100$
+Target string: incorrect
+
+Initial string: ^11110010+1001101=10110101$
+Target string: incorrect
+
+Initial string: ^111000+101000=1100000$
+Target string: correct
+```
+Huhh? Checking if binary addition is correct? Where in the world would we even begin? This level took me several hours as my teammates started working on other challenges. The key to do the addition was realize that for string replacements, the only way to check for things like equality is if they are right next to each other (at least I couldn't think of a way to do so). Thus this observation gives us that in order to do the addition, we need the least significant digits right next to each other.
+
+So the idea is this, say we have the binary digits in the form of '^abc+def=xyz$' (assume each alphabet is either a 1 or 0). We want 'c' and 'f' to be next to each other. We can do this by shifting 'def' past 'c' until 'c' and 'f' are adjacent like the following (Note the spaces are used for clarification and not actually part of the solution):
+```
+^abc+def=xyz$
+^ab+de fcadd=xyz$
+```
+where 'fcadd' means we want to add 'f' and 'c'.
+
+This in essence, allows us to add the last two digits (along with any carries!) before we proceed to the next signficant digit. For my answer, I used the notations ans0, ans1 to represent 0 and 1 respectively, and car0 to represent a carry. We can repeat this process (Note the spaces are used for clarification and not actually part of the solution):
+```
+^ab+de ans0 =xyz$ # say we get 0 from 'f' + 'c'
+^a+d ebadd ans0=xyz$ # shift the new least signficant number
+^a+d ans1 ans0=xyz$ # say we get 1 from 'e' + 'b'
+^adadd ans1 ans0=xyz$ # shift the new least significant number
+^car0 ans1 ans0=xyz$ # say we get a carry from 'd' + 'a'
+```
+Now all we have to do is look at the answers, do the carries and then do the equality check. Seems simpler right? 
+
+The carries and binary addition was manipulating a lot of states that I won't get into too much detail as it's just binary addition. You can look at my final solution below to get a better sense of it. Essentially, I convert everything into symbols like ans0, ans1, car0, car1 (where ans are normal 0s and 1s and car are for carries). Then I clean up the ans and cars by converting it to normal binary, while dealing with the carries, thus we are left with: '^abc=def$'
+
+For checking equality, unlike the palindrome, we have to check starting at the ends and not the middle. I couldn't think of anything fancy and so I did the same thing I did for addition and essentially shifted 'def' forwards into 'abc' but kept the least signficant digits, so I can test for equality. (Note the spaces are used for clarification and not actually part of the solution)
+```
+^abc=def$ # after summing
+^abc eqZ def$ # add delimiter 'Z' to separate 'abc' from 'def'
+
+# Equal case:
+^abZde faeq$ # Shift second number left, leaving least signficant digit
+^abZde$ # if 'f' == 'a' then flush 'faeq'
+^abZeqde$ # add 'eq' back into the string to repeat
+^aZe dbeq$ # if 'd' == 'b' then flush 'dbeq'
+^aZeqe$ # add 'eq' back and repeat
+^Z aeeq$ # if 'e' == 'q' then flush 'aeeq'
+^Z$ # The two strings are equal!, so replace this with 'correct'!
+
+
+# Unequal case:
+^abZde faeq$ #  if 'f' != 'a' then turn into 'incorrect'
+^abZde incorrect$ # Let 'incorrect' eat all characters in front of it
+^abZd incorrect$ # gobble those characters!
+^abZ incorrect$
+^ab incorrect$
+^a incorrect$
+^incorrect$ # now remove the '^' and '$' and voila! 'incorrect'!
+```
+
+Our final solution looks like this:
+```
+# add extra symbols so we can manipulate them more, 'T' is used to mark how far have we converted our ans/car symbols into 0s and 1s
+= => TeqZ
+^+ => ^
+
+# f will help us denote the most significant digit of our second number (so we can place the + back here after we finished adding the least significant digit)
++ => addf
+
+# Shift all the digits from the second number ahead of the 'add', 'f' is used as a separater between the first and second number 
+0addf => f0add
+1addf => f1add
+0add0 => 00add
+0add1 => 10add
+1add0 => 01add
+1add1 => 11add
+
+# Add the digits accordingly
+00add => ans0
+01add => ans1
+10add => ans1
+11add => car0
+
+# This implies we are done adding so we can just directly convert to its respective 0/1
+1add => 1
+0add => 0
+
+# If we hit f, this means the first number is longer than the second number, so extend the second number with a 0
+fans => f0ans
+fcar => f0car
+
+# Reset 'f' with '+' so we can add the more significant digits
+f => +
+
+# This means we are done adding as the first number is used up, and so we can just place 0
+^f => ^0
+
+# Convert the respective ans0, ans1, car0, car1 cases while shifting 'T', which marks our progress of our translation from our symbols to actual 0s and 1s
+ans0T => T0
+ans1T => T1
+car0car0T => car1T0
+ans0car0T => T10
+ans1car0T => car0T0
+ans0car1T => T11
+ans1car1T => car0T1
+car1car0T => car1T0
+car0car1T => car1T1
+
+# Handle carries when the first number is longer than the second number
+0car0 => 10
+1car0 => car00
+0car1 => 11
+1car1 => car01
+car0 => 10
+car1 => 11
+
+# Flush 'T' as we don't need it anymore
+T =>
+
+# Shift all the digits from the second number ahead of the 'eq', 'Z' is used as a separater between our summed and number checked in the equality
+0eqZ => Z0eq
+1eqZ => Z1eq
+0eq0 => 00eq
+0eq1 => 10eq
+1eq0 => 01eq
+1eq1 => 11eq
+
+# If all digits have matched up, then it is correct!
+^Z$ => correct
+
+# Gobble up those digits if a digit didn't match up!
+0incorrect => incorrect
+1incorrect => incorrect
+Zincorrect => incorrect
+^incorrect$ => incorrect
+
+# Flush the 'eq' if the digits match up
+00eq =>
+11eq =>
+
+# Enter an incorrect state if the digits don't match up
+10eq => incorrect
+01eq => incorrect
+
+# 
+^Z => ^0Z
+Z$ => Z0$
+
+# reset 'Z' so we can do more equality checkings
+Z => eqZ
+```
+And that's it! After solving these six levels (phew that took a while), we finally get our flag: 
+```
+flag{wtf_tur1n9_c0mpl3t3}
+```
+
+Huhh?? Turing complete? I didn't know that.. hmm guess I should work up my CS theory.
