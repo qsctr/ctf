@@ -109,9 +109,9 @@ Target string: palindrome
 Initial string: ^0001101011011101010100101001000011101000110100101110000100001110011111100101100110$
 Target string: not_palindrome
 ```
-Uh oh. This looks significnatly more difficult than level 4. We tried a few ideas with trying to check if both ends of the string were the same character, but that failed. Then we remembered that the one way of checking for palindromes was find the middle of the string and check outwards. Now with our string replacement rules, checking outwards should be easy as we can check via '1anything1' and '0anything0', and simply change the middle to something else (thus marking the string as not a palindrome). But moving the karat and the dollar sign to the middle of the string was a more daunting task than we expected.
+Uh oh. This looks significnatly more difficult than level 4. We tried a few ideas with trying to check if both ends of the string were the same character, but that failed. Then we remembered that the one way of checking for palindromes was find the middle of the string and check outwards. Now with our string replacement rules, checking outwards should be easy as we can check via '1anything1' and '0anything0', and simply change the middle to something else (thus marking the string as not a palindrome). But moving the caret and the dollar sign to the middle of the string was a more daunting task than we expected.
 
-The clever idea came to me of shifting the karat by one character, shifting the dollar sign by one character while marking both of them so they don't keep moving, and finally reset both of them to its orginal state.
+The clever idea came to me of shifting the caret by one character, shifting the dollar sign by one character while marking both of them so they don't keep moving, and finally reset both of them to its orginal state.
 
 ```
 # Handle not_palindrome state
@@ -126,18 +126,18 @@ The clever idea came to me of shifting the karat by one character, shifting the 
 1palindrome1 => palindrome
 0palindrome0 => palindrome
 
-# If the karat and dollar sign are in the middle of the string, goto palindrome state
+# If the caret and dollar sign are in the middle of the string, goto palindrome state
 ^$ => palindrome
 ^1$ => palindrome
 ^0$ => palindrome
 
-# Shift karat and dollar sign towards center and using the character 'z' to shift only by one character
+# Shift caret and dollar sign towards center and using the character 'z' to shift only by one character
 ^0 => 0^z
 0$ => z$0
 ^1 => 1^z
 1$ => z$1
 
-# If it's not palindrome or not_palindrome state and the karat and dollar sign have both moved one character, then flush 'z' so the karat and dollar sign can move again
+# If it's not palindrome or not_palindrome state and the caret and dollar sign have both moved one character, then flush 'z' so the caret and dollar sign can move again
 z =>
 ```
 
